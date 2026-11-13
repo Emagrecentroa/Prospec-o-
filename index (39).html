@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b4f4a">
+<title>Prospecção · Emagrecentro</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+:root{--d:#0b4f4a;--g:#14a394;--l:#e3f4f1;--bg:#f2f6f5;--c:#fff;--t:#16302d;--m:#66807c;--y:#ffc233;--r:#d9534f;--ln:#d5e3e0}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--t);padding-bottom:84px}
+header{background:var(--d);color:#fff;padding:calc(env(safe-area-inset-top,0px) + 16px) 16px 20px}
+header .row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+header h1{font-size:17px;margin:0;font-weight:700}
+select,input,textarea{font:inherit;color:var(--t);border:1.5px solid var(--ln);border-radius:10px;padding:10px;background:#fff;width:100%}
+header select{width:auto;background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.3);padding:7px 10px}
+header select option{color:#000}
+.hero{margin-top:14px;display:flex;gap:14px;align-items:center}
+.ring{width:88px;height:88px;border-radius:50%;display:grid;place-items:center;flex:none}
+.ring div{width:68px;height:68px;border-radius:50%;background:var(--d);display:grid;place-items:center;text-align:center;font-weight:700;font-size:20px;line-height:1}
+.ring small{display:block;font-size:11px;font-weight:400;opacity:.8;margin-top:2px}
+.stats{display:flex;gap:18px}
+.stats b{display:block;font-size:24px;color:var(--y)}
+.stats span{font-size:12px;opacity:.85}
+main{padding:14px;max-width:640px;margin:0 auto}
+.card{background:var(--c);border-radius:14px;padding:14px;margin-bottom:12px;border:1px solid var(--ln)}
+.card h3{margin:0 0 2px;font-size:16px}
+.sub{color:var(--m);font-size:13px;margin:0 0 10px}
+.btn{border:0;border-radius:10px;padding:11px 14px;font:inherit;font-weight:700;cursor:pointer;background:var(--g);color:#fff}
+.btn.wa{background:#1fa855;width:100%;margin-top:4px}
+.btn.sm{padding:8px 10px;font-size:13px;background:var(--l);color:var(--d)}
+.btn.ghost{background:transparent;color:var(--r);padding:6px 8px;font-size:13px}
+.btn:focus-visible,.tab:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--y);outline-offset:2px}
+.acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.tag{display:inline-block;font-size:12px;background:var(--l);color:var(--d);border-radius:20px;padding:3px 9px;margin-right:4px}
+.tag.fu{background:#fff1c9;color:#7a5600}
+.form{display:grid;gap:8px}
+.lrow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--ln)}
+.lrow:last-child{border:0}
+.pos{width:28px;height:28px;border-radius:50%;background:var(--l);display:grid;place-items:center;font-weight:700;flex:none}
+.bar{height:8px;background:var(--l);border-radius:8px;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;background:var(--g)}
+.badge{display:inline-block;margin:3px 4px 3px 0;padding:6px 10px;border-radius:20px;background:#fff1c9;font-size:13px}
+.badge.off{background:#eef2f1;color:#9ab;filter:grayscale(1);opacity:.7}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:#fff;border-top:1px solid var(--ln);padding-bottom:env(safe-area-inset-bottom,0px)}
+.tab{flex:1;border:0;background:none;padding:12px 2px;font:inherit;font-size:12px;color:var(--m);cursor:pointer}
+.tab.on{color:var(--d);font-weight:700;box-shadow:inset 0 3px 0 var(--g)}
+.empty{text-align:center;color:var(--m);padding:22px 10px}
+.toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 10px);transform:translateX(-50%);background:var(--y);color:#3a2b00;font-weight:700;padding:9px 16px;border-radius:24px;z-index:9;transition:opacity .3s}
+@media(prefers-reduced-motion:reduce){.toast{transition:none}}
+@media print{body.pr header,body.pr nav,body.pr .acts,body.pr .noprint,body.pr .toast,body.pr main>.card:not(#rel){display:none!important}body.pr{background:#fff;padding:0}}
+</style>
+</head>
+<body>
+<header>
+  <div class="row"><h1>Prospecção · Emagrecentro</h1><select id="me" aria-label="Quem está usando" onchange="setMe(this.value)"></select></div>
+  <div class="hero" id="hero"></div>
+</header>
+<main id="v"></main>
+<nav>
+  <button class="tab" data-t="hoje">Hoje</button>
+  <button class="tab" data-t="leads">Contatos</button>
+  <button class="tab" data-t="rank">Equipe</button>
+  <button class="tab" data-t="hist">Histórico</button>
+  <button class="tab" data-t="premios">Prêmios</button>
+</nav>
+<div id="toast" class="toast" style="opacity:0" role="status"></div>
+
+<script>
+const K='prosp_local_v2';
+const ORI={antigo:'Paciente antigo',orcamento:'Orçamento parado'};
+const DEFT={
+ antigo:'Oi {nome}, tudo bem? Aqui é {eu}, da Emagrecentro Araruama. Você fez tratamento com a gente há um tempo e eu fiquei pensando em você. Passei só para saber como você está! Se puder, me conta como foi a sua experiência com a gente. A sua opinião é muito importante para nós 💚',
+ orcamento:'Oi {nome}, tudo bem? Aqui é {eu}, da Emagrecentro Araruama. Passei para saber como você está e se ficou alguma dúvida sobre o que conversamos na sua avaliação. Pode me contar o que pesou na sua decisão? Quero muito te ajudar 💚',
+ seguir:'Oi {nome}, passando de novo para saber se você viu minha mensagem. Fico no aguardo para saber como você está 💚'
+};
+const TPL={...DEFT};
+const PTS={contato:10,resposta:20,agendou:50,fechou:100};
+const DEFR=[{id:1,name:'Café especial da clínica',pts:100},{id:2,name:'Brinde surpresa',pts:300},{id:3,name:'Meio período de folga',pts:800}];
+let S={team:[],leads:[],ev:[],rewards:[],goal:10,me:null,tab:'hoje'};
+try{const L=JSON.parse(localStorage.getItem(K)||'{}');if(L.me)S.me=L.me;if(L.tab)S.tab=L.tab}catch(e){}
+const save=()=>{try{localStorage.setItem(K,JSON.stringify({me:S.me,tab:S.tab}))}catch(e){}};
+firebase.initializeApp({apiKey:"AIzaSyC8O_nwaqkR0oAWivcxgn86bwm3F9Fd8Ho",authDomain:"prospec-1672c.firebaseapp.com",projectId:"prospec-1672c",storageBucket:"prospec-1672c.firebasestorage.app",messagingSenderId:"986808959215",appId:"1:986808959215:web:dd456b05c282f8001e9b1a"});
+const auth=firebase.auth(),db=firebase.firestore();
+db.enablePersistence({synchronizeTabs:true}).catch(()=>{});
+function fail(){toast('Não foi possível salvar. Confira a conexão.')}
+const put=(c,o)=>{const r=JSON.parse(JSON.stringify(o));delete r.id;return db.collection(c).doc(String(o.id)).set(r).catch(fail)};
+const rm=(c,id)=>db.collection(c).doc(String(id)).delete().catch(fail);
+let USER=null,READY={},ERR=null,unsub=[],PEND=false;
+const need=['team','leads','ev','rewards','cfg'];
+function listen(){
+  need.forEach(n=>{
+    unsub.push(db.collection(n).onSnapshot(sn=>{
+      if(n==='cfg'){
+        const m=sn.docs.find(x=>x.id==='msgs');if(m)Object.assign(TPL,m.data());
+        const d=sn.docs.find(x=>x.id==='main');
+        if(d)S.goal=d.data().goal||10;
+        else if(!sn.metadata.fromCache){db.collection('cfg').doc('main').set({goal:10});DEFR.forEach(r=>put('rewards',r))}
+      }else{
+        S[n]=sn.docs.map(d=>({...d.data(),id:Number(d.id)}));
+        if(n==='ev')S.ev.sort((a,b)=>a.t-b.t);
+      }
+      READY[n]=true;redraw();
+    },e=>{ERR=e.code||'erro';redraw()}));
+  });
+}
+auth.onAuthStateChanged(u=>{USER=u;unsub.forEach(f=>f());unsub=[];READY={};ERR=null;if(u)listen();draw()});
+function entrar(){auth.signInWithEmailAndPassword(document.getElementById('em').value.trim(),document.getElementById('pw').value).catch(()=>toast('E-mail ou senha incorretos'))}
+function sair(){auth.signOut()}
+const loginHTML=()=>`<div class="card"><h3>Entrar</h3><p class="sub">Use o e-mail e a senha da equipe.</p><div class="form"><input id="em" type="email" autocomplete="username" placeholder="E-mail"><input id="pw" type="password" autocomplete="current-password" placeholder="Senha" onkeydown="if(event.key==='Enter')entrar()"><button class="btn" onclick="entrar()">Entrar</button></div></div>`;
+const typing=()=>{const a=document.activeElement;return a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)&&document.getElementById('v').contains(a)};
+function redraw(){if(typing()){PEND=true;return}draw()}
+document.addEventListener('focusout',()=>setTimeout(()=>{if(PEND&&!typing()){PEND=false;draw()}},200));
+let _u=0;const uid=()=>Date.now()*1000+(_u++%1000);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const dk=t=>new Date(t).toDateString();
+const pts=w=>S.ev.filter(e=>e.w===w).reduce((a,e)=>a+e.p,0);
+const cnt=(w,d)=>S.ev.filter(e=>e.w===w&&e.k==='contato'&&dk(e.t)===dk(d)).length;
+const tot=(w,k)=>S.ev.filter(e=>e.w===w&&e.k===k).length;
+function streak(w){let d=new Date(),n=0;if(cnt(w,d)<S.goal)d.setDate(d.getDate()-1);while(cnt(w,d)>=S.goal){n++;d.setDate(d.getDate()-1)}return n}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.style.opacity=1;clearTimeout(toast.h);toast.h=setTimeout(()=>t.style.opacity=0,1800)}
+function who(){return S.team.find(x=>x.id===S.me)}
+function setMe(v){S.me=v?+v:null;save();draw()}
+function setTab(t){S.tab=t;save();draw()}
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>setTab(b.dataset.t));
+
+function ev(lead,k,extra){
+  const me=who();if(!me)return;
+  const E={id:uid(),w:me.id,k,p:PTS[k],t:Date.now(),l:lead.id,n:lead.nome,ps:lead.st,pl:lead.last||0,pd:lead.dono||''};S.ev.push(E);put('ev',E);if(!lead.dono)lead.dono=me.id;
+  lead.last=Date.now();
+  const before=cnt(me.id,Date.now())-(k==='contato'?1:0);
+  if(k==='contato'){lead.st=lead.st==='novo'?'contatado':lead.st;toast('+'+PTS[k]+' pontos');
+    if(before<S.goal&&cnt(me.id,Date.now())===S.goal)setTimeout(()=>toast('Meta do dia batida!'),1900)}
+  if(k==='resposta'){lead.st='respondeu';toast('+20 pontos')}
+  if(k==='agendou'){lead.st='agendado';lead.aval=extra;toast('+50 pontos')}
+  if(k==='fechou'){lead.st='fechado';toast('+100 pontos')}
+  put('leads',lead);draw();
+}
+function wa(id){
+  const l=S.leads.find(x=>x.id===id);if(!who()){toast('Escolha quem está usando');return}
+  let n=l.tel.replace(/\D/g,'');if(n.length<=11)n='55'+n;
+  const tp=l.st==='contatado'?TPL.seguir:(TPL[l.o]||TPL.antigo);
+  const nome=l.nome.split(' ')[0];
+  window.open('https://wa.me/'+n+'?text='+encodeURIComponent(tp.split('{nome}').join(nome).split('{eu}').join((who()||{}).name||'')),'_blank');
+  ev(l,'contato');
+}
+function nope(id){const l=S.leads.find(x=>x.id===id);l.st='sem interesse';put('leads',l);draw()}
+function del(id){if(confirm('Remover este contato?')){S.leads=S.leads.filter(x=>x.id!==id);rm('leads',id);draw()}}
+
+function queue(){
+  const lim=Date.now()-2*864e5;
+  return S.leads.filter(l=>(l.st==='novo'&&!l.dono)||(l.st==='contatado'&&l.last<lim&&(!l.dono||l.dono===S.me))).sort((a,b)=>(a.st==='contatado')-(b.st==='contatado'));
+}
+function hoje(){
+  const me=who();
+  if(!S.team.length)return `<div class="card"><h3>Comece por aqui</h3><p class="sub">Quem vai usar o app? Cadastre o primeiro nome.</p><div class="form"><input id="nm" placeholder="Seu nome"><button class="btn" onclick="addM('nm')">Entrar</button></div></div>`;
+  if(!me)return '<div class="card empty">Escolha o seu nome no topo para ver a sua lista.</div>';
+  if(!S.leads.length)return `<div class="card empty">Nenhum contato na lista. Adicione na aba <b>Contatos</b>: pacientes antigos, orçamentos parados e indicações.</div>`;
+  const q=queue().slice(0,Math.max(S.goal,5));
+  const act=S.leads.filter(l=>['respondeu','agendado'].includes(l.st)&&l.dono===S.me);
+  let h='';
+  if(!q.length)h+=`<div class="card empty">Lista do dia zerada. Adicione mais contatos ou espere os retornos.</div>`;
+  h+=q.map(l=>`<div class="card"><h3>${esc(l.nome)}</h3><p class="sub"><span class="tag">${ORI[l.o]}</span>${l.st==='contatado'?'<span class="tag fu">Retorno</span>':''}</p>${info(l)}<button class="btn wa" onclick="wa(${l.id})">${l.st==='contatado'?'Chamar de novo no WhatsApp':'Chamar no WhatsApp'}</button>${l.st==='contatado'?acoes(l):det(l)}</div>`).join('');
+  if(act.length)h+=`<h3 style="margin:18px 2px 8px">Em andamento</h3>`+act.map(l=>stCard(l)).join('');
+  const sent=S.leads.filter(l=>l.st==='contatado'&&l.dono===S.me&&l.last>=Date.now()-2*864e5);
+  if(sent.length)h+=`<h3 style="margin:18px 2px 8px">Aguardando resposta</h3>`+sent.map(l=>stCard(l)).join('');
+  return h;
+}
+function acoes(l){
+  const e=k=>`ev(S.leads.find(x=>x.id===${l.id}),'${k}')`;
+  const ag=['contatado','respondeu'].includes(l.st);
+  return `${l.st==='contatado'?`<div class="acts"><button class="btn sm" onclick="${e('resposta')}">Respondeu +20</button></div>`:''}
+  ${ag?`<div class="form" style="margin-top:8px"><label class="sub" for="dt${l.id}" style="margin:0">Data e hora da avaliação</label><input id="dt${l.id}" type="datetime-local"><button class="btn" onclick="agendar(${l.id})">Agendou avaliação +50</button></div>`:''}
+  ${l.st==='agendado'?`<div class="acts"><button class="btn sm" onclick="${e('fechou')}">Fechou +100</button></div>`:''}
+  ${det(l)}<div class="acts"><button class="btn ghost" onclick="nope(${l.id})">Sem interesse</button></div>`;
+}
+function stCard(l){return `<div class="card"><h3>${esc(l.nome)}</h3><p class="sub"><span class="tag">${l.st}</span></p>${info(l)}${acoes(l)}</div>`}
+let QB='';
+function listaL(){
+  const q=QB.trim().toLowerCase();
+  const A=q?S.leads.filter(l=>l.nome.toLowerCase().includes(q)):S.leads;
+  if(!A.length)return '<p class="empty">'+(S.leads.length?'Ninguém com esse nome.':'Ainda sem contatos.')+'</p>';
+  return (A.length>100?'<p class="sub">Mostrando 100 de '+A.length+'. Use a busca para achar um nome.</p>':'')+A.slice(0,100).map(l=>`<div class="lrow"><div><b>${esc(l.nome)}</b><br><span class="sub" style="margin:0">${ORI[l.o]} · ${l.st}${l.tr?' · '+esc(l.tr):''}${l.dono?' · com '+esc(nm(l.dono)):''}</span></div><button class="btn ghost" onclick="del(${l.id})">Remover</button></div>`).join('');
+}
+function leads(){
+  const opt=Object.entries(ORI).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
+  return `<div class="card"><h3>Novo contato</h3><div class="form"><input id="ln" placeholder="Nome"><input id="lt" type="tel" placeholder="WhatsApp com DDD"><select id="lo">${opt}</select><input id="ltr" placeholder="Tratamento de interesse (ex.: Speed)"><textarea id="lob" rows="2" placeholder="Observação combinada com o paciente"></textarea><button class="btn" onclick="addL()">Salvar contato</button></div></div>
+  <details class="card"><summary><b>Colar uma lista</b></summary><p class="sub" style="margin-top:8px">Uma pessoa por linha: nome;telefone</p><div class="form"><textarea id="bulkTxt" rows="5" placeholder="Maria Silva;22999990000"></textarea><select id="bo">${opt}</select><button class="btn" onclick="importar()">Importar</button></div></details>
+  <div class="card"><h3>${S.leads.length} contatos</h3><input id="busca" value="${esc(QB)}" style="margin:8px 0" placeholder="Buscar por nome" aria-label="Buscar contato" oninput="QB=this.value;document.getElementById('ll').innerHTML=listaL()"><div id="ll">${listaL()}</div></div>`;
+}
+function addL(){
+  const n=ln.value.trim(),t=lt.value.trim();if(!n||t.replace(/\D/g,'').length<10){toast('Preencha nome e telefone com DDD');return}
+  const L={id:uid(),nome:n,tel:t,o:lo.value,st:'novo',last:0,tr:ltr.value.trim(),obs:lob.value.trim()};S.leads.push(L);put('leads',L);draw();toast('Contato salvo');
+}
+function importar(){
+  const L=[];let k=0;
+  bulkTxt.value.split('\n').forEach(r=>{const p=r.split(/[;,\t]/);const n=(p[0]||'').trim(),t=(p[1]||'').trim();if(n&&t.replace(/\D/g,'').length>=10)L.push({id:uid()+(k++),nome:n,tel:t,o:bo.value,st:'novo',last:0})});
+  if(!L.length){toast('Nenhuma linha válida. Use nome;telefone');return}
+  const have=new Set(S.leads.map(l=>l.tel.replace(/\D/g,'')));
+  const N=L.filter(l=>{const d=l.tel.replace(/\D/g,'');if(have.has(d))return false;have.add(d);return true});
+  if(!N.length){toast('Todos já estavam na lista');return}
+  toast('Importando '+N.length+' contatos…');bulkTxt.value='';
+  (async()=>{try{for(let a=0;a<N.length;a+=400){const b=db.batch();N.slice(a,a+400).forEach(l=>{const r={...l};delete r.id;b.set(db.collection('leads').doc(String(l.id)),r)});await b.commit()}toast(N.length+' contatos importados')}catch(e){fail()}})();
+}
+function addM(id){
+  const v=document.getElementById(id).value.trim();if(!v)return;
+  const m={id:uid(),name:v};S.team.push(m);put('team',m);if(!S.me)S.me=m.id;save();draw();
+}
+function rank(){
+  const r=S.team.map(m=>({m,p:pts(m.id),c:cnt(m.id,Date.now())})).sort((a,b)=>b.p-a.p);
+  return `<div class="card"><h3>Ranking</h3><p class="sub">Pontos acumulados e contatos feitos hoje (meta: ${S.goal})</p>${r.length?r.map((x,i)=>`<div class="lrow"><div style="display:flex;gap:10px;align-items:center"><span class="pos">${i+1}</span><b>${esc(x.m.name)}</b></div><div style="text-align:right"><b>${x.p} pts</b><br><span class="sub" style="margin:0">${x.c} hoje</span></div></div>`).join(''):'<p class="empty">Cadastre a equipe abaixo.</p>'}</div>
+  <div class="card"><h3>Adicionar pessoa</h3><div class="form"><input id="nm2" placeholder="Nome"><button class="btn" onclick="addM('nm2')">Adicionar</button></div></div>
+  <div class="card"><h3>Mensagens de WhatsApp</h3><p class="sub">Use {nome} para o primeiro nome do paciente e {eu} para o nome de quem envia.</p>
+  <div class="form"><label class="sub" for="m1" style="margin:0">Paciente antigo</label><textarea id="m1" rows="6">${esc(TPL.antigo)}</textarea>
+  <label class="sub" for="m2" style="margin:0">Orçamento parado</label><textarea id="m2" rows="5">${esc(TPL.orcamento)}</textarea>
+  <label class="sub" for="m3" style="margin:0">Retorno (quando não respondeu)</label><textarea id="m3" rows="3">${esc(TPL.seguir)}</textarea>
+  <button class="btn" onclick="saveMsgs()">Salvar mensagens</button></div></div>
+  <div class="card"><h3>Meta diária</h3><p class="sub">Contatos por pessoa por dia</p><input id="goal" type="number" min="1" value="${S.goal}" onchange="S.goal=Math.max(1,+this.value||10);db.collection('cfg').doc('main').set({goal:S.goal});draw()"></div>
+  <div class="card"><button class="btn sm" onclick="sair()">Sair da conta</button></div>`;
+}
+function premios(){
+  const me=who(),p=me?pts(me.id):0;
+  const B=[['Primeiro contato',me&&tot(me.id,'contato')>=1],['50 contatos',me&&tot(me.id,'contato')>=50],['Primeira avaliação agendada',me&&tot(me.id,'agendou')>=1],['Primeira venda',me&&tot(me.id,'fechou')>=1],['3 dias seguidos na meta',me&&streak(me.id)>=3],['5 dias seguidos na meta',me&&streak(me.id)>=5]];
+  return `<div class="card"><h3>Medalhas</h3><p class="sub">${me?esc(me.name):''}</p>${B.map(b=>`<span class="badge ${b[1]?'':'off'}">${b[0]}</span>`).join('')}</div>
+  <div class="card"><h3>Prêmios</h3><p class="sub">Você tem ${p} pontos</p>${S.rewards.sort((a,b)=>a.pts-b.pts).map(r=>`<div class="lrow" style="display:block"><div style="display:flex;justify-content:space-between"><b>${esc(r.name)}</b><span>${r.pts} pts</span></div><div class="bar"><i style="width:${Math.min(100,p/r.pts*100)}%"></i></div>${p>=r.pts?'<p class="sub" style="margin:6px 0 0;color:var(--d)"><b>Liberado! Mostre para a gestora.</b></p>':''}<button class="btn ghost" onclick="delR(${r.id})">Remover</button></div>`).join('')}</div>
+  <div class="card"><h3>Novo prêmio</h3><div class="form"><input id="rn" placeholder="Ex.: Almoço pago pela clínica"><input id="rp" type="number" placeholder="Pontos necessários"><button class="btn" onclick="addR()">Adicionar prêmio</button></div></div>`;
+}
+function saveMsgs(){
+  const M={antigo:m1.value.trim(),orcamento:m2.value.trim(),seguir:m3.value.trim()};
+  if(!M.antigo||!M.orcamento||!M.seguir){toast('Nenhuma mensagem pode ficar vazia');return}
+  Object.assign(TPL,M);
+  db.collection('cfg').doc('msgs').set(M).then(()=>toast('Mensagens salvas')).catch(fail);
+}
+function addR(){const n=rn.value.trim(),p=+rp.value;if(!n||!p)return;const R={id:uid(),name:n,pts:p};S.rewards.push(R);put('rewards',R);draw()}
+function delR(id){S.rewards=S.rewards.filter(r=>r.id!==id);rm('rewards',id);draw()}
+
+const fd=v=>new Date(v).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+const info=l=>{const a=[];if(l.tr)a.push('Interesse: '+esc(l.tr));if(l.prot)a.push('Protocolo: '+esc(l.prot));if(l.of)a.push('Oferta: '+esc(l.of));if(l.aval)a.push('Avaliação: '+fd(l.aval));return (a.length?'<p class="sub">'+a.join(' · ')+'</p>':'')+(l.obs?'<p class="sub">Obs.: '+esc(l.obs)+'</p>':'')};
+function obs(id){const l=S.leads.find(x=>x.id===id);const v=prompt('Observação combinada com o paciente:',l.obs||'');if(v===null)return;l.obs=v.trim();put('leads',l);draw()}
+function agendar(id){const v=document.getElementById('dt'+id).value;if(!v){toast('Escolha data e hora da avaliação');return}ev(S.leads.find(x=>x.id===id),'agendou',v)}
+function desfazer(){
+  const e=lastMine();if(!e||!confirm('Desfazer a última ação ('+KN[e.k]+' · '+e.n+')?'))return;
+  const l=S.leads.find(x=>x.id===e.l);if(l){l.st=e.ps;l.last=e.pl;if(e.k==='agendou')delete l.aval;if(e.pd)l.dono=e.pd;else delete l.dono;put('leads',l)}
+  S.ev=S.ev.filter(x=>x.id!==e.id);rm('ev',e.id);draw();toast('Ação desfeita');
+}
+let HP='7';
+const PER={'0':'Hoje','7':'Últimos 7 dias','30':'Últimos 30 dias',all:'Tudo'};
+const KN={contato:'Contato feito',resposta:'Respondeu',agendou:'Avaliação agendada',fechou:'Venda fechada'};
+const nm=id=>(S.team.find(m=>m.id===id)||{name:'?'}).name;
+function evs(){const lim=HP==='all'?0:HP==='0'?new Date().setHours(0,0,0,0):Date.now()-(+HP)*864e5;return S.ev.filter(e=>e.t>=lim)}
+function resumo(){const E=evs();return S.team.map(m=>{const x=k=>E.filter(e=>e.w===m.id&&e.k===k).length;return{n:m.name,c:x('contato'),r:x('resposta'),a:x('agendou'),f:x('fechou'),p:E.filter(e=>e.w===m.id).reduce((s,e)=>s+e.p,0)}})}
+function txt(){const R=resumo();const T=k=>R.reduce((s,x)=>s+x[k],0);
+  return 'Relatório de prospecção · Emagrecentro Araruama\nPeríodo: '+PER[HP]+'\n\n'+R.map(x=>x.n+': '+x.c+' contatos, '+x.r+' respostas, '+x.a+' avaliações agendadas, '+x.f+' vendas, '+x.p+' pontos').join('\n')+'\n\nTotal: '+T('c')+' contatos, '+T('r')+' respostas, '+T('a')+' avaliações agendadas, '+T('f')+' vendas'}
+function copiar(){const t=txt();if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast('Resumo copiado'),()=>toast('Não foi possível copiar'));else toast('Não foi possível copiar')}
+function csv(){
+  const q=s=>'"'+String(s==null?'':s).replace(/"/g,'""')+'"';
+  const rows=[['Data','Hora','Pessoa','Ação','Contato','Tratamento de interesse','Avaliação agendada','Observação','Pontos']];
+  evs().forEach(e=>{const l=S.leads.find(x=>x.id===e.l)||{};const d=new Date(e.t);rows.push([d.toLocaleDateString('pt-BR'),d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),nm(e.w),KN[e.k],e.n,l.tr,l.aval?fd(l.aval):'',l.obs,e.p])});
+  const b=new Blob(['\ufeff'+rows.map(r=>r.map(q).join(';')).join('\r\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='relatorio-prospeccao.csv';document.body.appendChild(a);a.click();a.remove();
+}
+const det=l=>`<details style="margin-top:8px"><summary class="sub" style="margin:0;cursor:pointer">Dados do paciente</summary><div class="form" style="margin-top:8px"><input id="a${l.id}" placeholder="Tratamento de interesse" value="${esc(l.tr||'')}"><input id="b${l.id}" placeholder="Protocolo anterior (ex.: ainda tem sessões)" value="${esc(l.prot||'')}"><input id="c${l.id}" placeholder="O que vamos oferecer" value="${esc(l.of||'')}"><textarea id="d${l.id}" rows="2" placeholder="Observação combinada com o paciente">${esc(l.obs||'')}</textarea><button class="btn sm" onclick="saveDet(${l.id})">Salvar dados</button></div></details>`;
+function saveDet(id){const l=S.leads.find(x=>x.id===id),g=k=>document.getElementById(k+id).value.trim();l.tr=g('a');l.prot=g('b');l.of=g('c');l.obs=g('d');put('leads',l);draw();toast('Dados salvos')}
+let RP='';
+const SIT=l=>l.st==='fechado'?'Fechou':(l.st==='agendado'?(new Date(l.aval)<Date.now()?'Data passada':'Agendada'):l.st);
+const avals=()=>S.leads.filter(l=>l.aval&&(!RP||String(l.dono)===RP)).sort((a,b)=>a.aval<b.aval?-1:1);
+const dets=l=>[l.tr&&'Interesse: '+l.tr,l.prot&&'Protocolo: '+l.prot,l.of&&'Oferta: '+l.of,l.obs&&'Obs.: '+l.obs].filter(Boolean);
+function avalTxt(){const A=avals();return 'Avaliações agendadas · Emagrecentro Araruama'+(RP?' · '+nm(+RP):'')+'\n\n'+(A.length?A.map(l=>fd(l.aval)+' · '+l.nome+' · '+SIT(l)+(l.dono?' · com '+nm(l.dono):'')+(dets(l).length?'\n   '+dets(l).join(' · '):'')).join('\n'):'Nenhuma avaliação marcada.')}
+function copiarAval(){const t=avalTxt();if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast('Relatório copiado'),()=>toast('Não foi possível copiar'));else toast('Não foi possível copiar')}
+function csvAval(){
+  const q=s=>'"'+String(s==null?'':s).replace(/"/g,'""')+'"';
+  const rows=[['Data','Hora','Paciente','Situação','Interesse','Protocolo','Oferta','Observação','Responsável']];
+  avals().forEach(l=>{const d=new Date(l.aval);rows.push([d.toLocaleDateString('pt-BR'),d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),l.nome,SIT(l),l.tr,l.prot,l.of,l.obs,l.dono?nm(l.dono):''])});
+  const b=new Blob(['\ufeff'+rows.map(r=>r.map(q).join(';')).join('\r\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='avaliacoes-agendadas.csv';document.body.appendChild(a);a.click();a.remove();
+}
+function imprimir(){document.body.classList.add('pr');window.print()}
+window.addEventListener('afterprint',()=>document.body.classList.remove('pr'));
+function avalCard(){
+  const A=avals();
+  return `<div class="card" id="rel"><h3>Avaliações agendadas</h3><select id="rp" class="noprint" style="margin:8px 0" onchange="RP=this.value;draw()" aria-label="Filtrar por pessoa"><option value="">Todas as pessoas</option>${S.team.map(m=>`<option value="${m.id}" ${String(m.id)===RP?'selected':''}>${esc(m.name)}</option>`).join('')}</select>
+  ${A.length?A.map(l=>`<div class="lrow" style="display:block"><b>${fd(l.aval)}</b> · ${esc(l.nome)} <span class="tag">${SIT(l)}</span><br><span class="sub" style="margin:0">${[...dets(l).map(esc),l.dono?'Responsável: '+esc(nm(l.dono)):''].filter(Boolean).join(' · ')||'Sem detalhes'}</span></div>`).join(''):'<p class="empty">Nenhuma avaliação marcada ainda.</p>'}
+  <div class="acts"><button class="btn sm" onclick="copiarAval()">Copiar</button><button class="btn sm" onclick="csvAval()">Baixar planilha</button><button class="btn sm" onclick="imprimir()">Imprimir ou PDF</button></div></div>`;
+}
+function hist(){
+  const R=resumo(),E=evs().filter(e=>HW==='all'||(HW==='me'?e.w===S.me:String(e.w)===HW)).reverse();
+  return avalCard()+`<div class="card"><h3>Relatório</h3><select id="per" style="margin:8px 0" onchange="HP=this.value;draw()" aria-label="Período">${Object.entries(PER).map(([k,v])=>`<option value="${k}" ${k===HP?'selected':''}>${v}</option>`).join('')}</select>
+  ${R.length?R.map(x=>`<div class="lrow" style="display:block"><b>${esc(x.n)}</b> <span class="sub" style="margin:0">· ${x.p} pts</span><br><span class="sub" style="margin:0">${x.c} contatos · ${x.r} respostas · ${x.a} avaliações · ${x.f} vendas</span></div>`).join(''):'<p class="empty">Sem equipe cadastrada.</p>'}
+  <div class="acts"><button class="btn sm" onclick="copiar()">Copiar resumo</button><button class="btn sm" onclick="csv()">Baixar planilha</button></div></div>
+  <div class="card"><h3>Histórico</h3><select class="noprint" style="margin:8px 0" aria-label="Ver ações de" onchange="HW=this.value;draw()">${hwOpts()}</select>${E.length?E.slice(0,60).map((e,i)=>`<div class="lrow"><div><b>${esc(e.n)}</b><br><span class="sub" style="margin:0">${KN[e.k]} · ${esc(nm(e.w))} · ${fd(e.t)}</span></div>${e===lastMine()?`<button class="btn ghost" onclick="desfazer()">Desfazer</button>`:`<span>+${e.p}</span>`}</div>`).join(''):'<p class="empty">Ainda sem ações registradas.</p>'}</div>`;
+}
+const MG=new Set();
+function migrar(){
+  S.leads.filter(l=>!l.dono&&l.st!=='novo'&&!MG.has(l.id)).forEach(l=>{
+    const e=S.ev.find(x=>x.l===l.id);
+    if(e){MG.add(l.id);l.dono=e.w;put('leads',l)}
+  });
+}
+const lastMine=()=>{for(let i=S.ev.length-1;i>=0;i--)if(S.ev[i].w===S.me)return S.ev[i]};
+let HW='me';
+const hwOpts=()=>`<option value="me" ${HW==='me'?'selected':''}>Minhas ações</option><option value="all" ${HW==='all'?'selected':''}>Todas as ações</option>`+S.team.map(m=>`<option value="${m.id}" ${String(m.id)===HW?'selected':''}>${esc(m.name)}</option>`).join('');
+function draw(){
+  document.querySelector('nav').style.display=USER?'flex':'none';
+  if(!USER||need.some(n=>!READY[n])){
+    document.getElementById('hero').innerHTML='';document.getElementById('me').style.display='none';
+    document.getElementById('v').innerHTML=!USER?loginHTML():(ERR?'<div class="card empty">Sem permissão para ler os dados ('+ERR+'). Confira as regras do Firestore.</div>':'<div class="card empty">Carregando…</div>');
+    return;
+  }
+  document.getElementById('me').style.display='';
+  migrar();
+  if(S.me&&!S.team.some(m=>m.id===S.me))S.me=null;
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.t===S.tab));
+  const sel=document.getElementById('me');
+  sel.innerHTML=S.team.length?(S.me?'':'<option value="">Quem é você?</option>')+S.team.map(m=>`<option value="${m.id}" ${m.id===S.me?'selected':''}>${esc(m.name)}</option>`).join(''):'<option>Sem equipe</option>';
+  const me=who(),c=me?cnt(me.id,Date.now()):0,pc=Math.min(100,c/S.goal*100);
+  document.getElementById('hero').innerHTML=me?`<div class="ring" style="background:conic-gradient(var(--y) ${pc*3.6}deg,rgba(255,255,255,.18) 0)"><div>${c}/${S.goal}<small>contatos</small></div></div><div class="stats"><div><b>${pts(me.id)}</b><span>pontos</span></div><div><b>${streak(me.id)}</b><span>dias na meta</span></div></div>`:'';
+  document.getElementById('v').innerHTML={hoje,leads,rank,hist,premios}[S.tab]();
+}
+if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+draw();
+</script>
+</body>
+</html>
